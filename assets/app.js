@@ -12,10 +12,15 @@ const playBtn = $('.btn-toggle-play')
 const progress = $('#progress')
 const prevBtn = $('.btn-prev')
 const nextBtn = $('.btn-next')
+const randomBtn = $('.btn-random')
+const repeatBtn = $('.btn-repeat')
+const activeSong =$('song')
 
 const app ={
     currentIndex: 0,
     isPlaying: false,
+    isRandoming:false,
+    isRepeat:false,
     songs: [
     {
       name: "Trọn vẹn nghĩa tình",
@@ -63,9 +68,9 @@ const app ={
     }
 ],
     render:function (){
-        const htmls = this.songs.map(song =>{
+        const htmls = this.songs.map((song, index) =>{
             return ` 
-                <div class="song">
+                <div class="song ${index === this.currentIndex ? 'active': ''}">
                     <div class="thumb"
                         style="background-image: url('${song.image}')">
                     </div>
@@ -103,16 +108,34 @@ const app ={
             cd.style.width = newcdWidth > 0 ? newcdWidth + 'px' : 0;
             cd.style.opacity = newcdWidth / cdWidth ;
         }
+        // handle button properties
+        randomBtn.onclick = () =>{
+            app.isRandoming = !app.isRandoming;
+            randomBtn.classList.toggle('active', app.isRandoming)
+        }
+        repeatBtn.onclick = () =>{
+            app.isRepeat = !app.isRepeat;
+            repeatBtn.classList.toggle('active', app.isRepeat)
+        }
         // handle Prev Music
         prevBtn.onclick = () =>{
+            if(app.isRandoming){
+                app.playRandomSong();
+            }
             app.prevSong();
             audio.play();
+            app.render();
         }
         //handle Next Music 
         nextBtn.onclick = () =>{
+            if(app.isRandoming){
+                app.playRandomSong();
+            }
             app.nextSong();
             audio.play();
+            app.render();
         }
+
         // handle Play Music
         playBtn.onclick = () => {
             if (app.isPlaying){  
@@ -137,25 +160,43 @@ const app ={
                     progress.value = progressPercent;
                 }
             }
+            audio.onended =() =>{
+                if(app.isRandoming){
+                    setTimeout(2000);
+                    nextBtn.click();
+                } else if (app.isRepeat){
+                    audio.play();
+                }
+            }
 
             progress.onchange = (even)=>{
                 const seekTime = Math.floor(audio.duration / 100 * even.target.value);
                 audio.currentTime = seekTime;
             }
     },
-    nextSong: function (){
+    nextSong: function() {
         app.currentIndex++;
         if(this.currentIndex >= this.songs.length ){
             this.currentIndex = 0;
         }
         this.loadCurrentSong();
     },
-    prevSong: function (){
+    prevSong: function() {
         if(this.currentIndex <= 0 ){
             this.currentIndex = this.songs.length;
         }
         this.currentIndex--;
         this.loadCurrentSong()
+    },
+    playRandomSong: function() {
+        let randomIdex = 2;
+        do {
+            randomIdex = Math.floor(Math.random() * app.songs.length);
+        } while (this.currentIndex == randomIdex);
+        this.currentIndex = randomIdex;
+    },
+    playRepeatSong: function() {
+
     },
     start: function() {
         this.defineProperties();
