@@ -14,7 +14,7 @@ const prevBtn = $('.btn-prev')
 const nextBtn = $('.btn-next')
 const randomBtn = $('.btn-random')
 const repeatBtn = $('.btn-repeat')
-const activeSong =$('song')
+
 
 const app ={
     currentIndex: 0,
@@ -70,7 +70,7 @@ const app ={
     render:function (){
         const htmls = this.songs.map((song, index) =>{
             return ` 
-                <div class="song ${index === this.currentIndex ? 'active': ''}">
+                <div class="song ${index === this.currentIndex ? 'active': ''}" data-index="${index}">
                     <div class="thumb"
                         style="background-image: url('${song.image}')">
                     </div>
@@ -87,6 +87,7 @@ const app ={
         });
         playList.innerHTML = htmls.join('')
     },
+
     defineProperties: function() {
         Object.defineProperty(this, 'currentSong', {
             get: function() {
@@ -94,12 +95,34 @@ const app ={
             }
         })
     },
+
     loadCurrentSong: function (){
         heading.textContent = this.currentSong.name;
         cdThumb.style.backgroundImage = `url(${this.currentSong.image})`;
         audio.src = this.currentSong.path;
     },
+
+    scrollToSong: function() {
+        setTimeout (()=>{
+            $('.song.active').scrollIntoView({
+                behavior: 'smooth',
+                block: 'nearest'
+            }, 200);
+        })
+           
+    },
+
     handleEven: function() {
+
+        const cdThumbAnimate = cdThumb.animate([
+            { transform: 'rotate(360deg)'}
+        ], {
+            duration: 15000,
+            interation: Infinity
+        })
+        cdThumbAnimate.pause();
+
+
         // handle Scroll
         const cdWidth = cd.offsetWidth;
         document.onscroll = () => {
@@ -108,6 +131,8 @@ const app ={
             cd.style.width = newcdWidth > 0 ? newcdWidth + 'px' : 0;
             cd.style.opacity = newcdWidth / cdWidth ;
         }
+
+
         // handle button properties
         randomBtn.onclick = () =>{
             app.isRandoming = !app.isRandoming;
@@ -117,6 +142,8 @@ const app ={
             app.isRepeat = !app.isRepeat;
             repeatBtn.classList.toggle('active', app.isRepeat)
         }
+
+
         // handle Prev Music
         prevBtn.onclick = () =>{
             if(app.isRandoming){
@@ -134,14 +161,29 @@ const app ={
             app.nextSong();
             audio.play();
             app.render();
+            app.scrollToSong();
         }
 
         // handle Play Music
         playBtn.onclick = () => {
             if (app.isPlaying){  
                 audio.pause();
+                cdThumbAnimate.pause();
             } else {
                 audio.play();
+                cdThumbAnimate.play();
+            }
+        }
+        playList.onclick = function(even){
+            const songNode = even.target.closest('.song:not(.active)')
+            if (songNode || even.target.closest('.option')){
+                
+                if(songNode){
+                    app.currentIndex = Number(songNode.dataset.index);
+                    app.loadCurrentSong();
+                    audio.play();
+                    app.render();
+                }
             }
         }
             // audio handle
