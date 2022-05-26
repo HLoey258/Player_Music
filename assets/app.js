@@ -197,6 +197,7 @@ const app ={
             audio.onplay = () =>{
                 app.isPlaying =true;
                 player.classList.add('playing');
+                cdThumbAnimate.play();
             }
             audio.onpause = () =>{
                 app.isPlaying = false;
