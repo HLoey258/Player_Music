@@ -1,6 +1,8 @@
 const $ = document.querySelector.bind(document);
 const $$ = document.querySelectorAll.bind(document);
 
+const  PLAYER_STORAGE_KEY = 'MUSIC_PLAYER'
+
 const playList = $('.playlist')
 const cd = $('.cd')
 const player = $('.player')
@@ -21,6 +23,7 @@ const app ={
     isPlaying: false,
     isRandoming:false,
     isRepeat:false,
+    config: JSON.parse(localStorage.getItem(PLAYER_STORAGE_KEY)) || {},
     songs: [
     {
       name: "Trọn vẹn nghĩa tình",
@@ -67,6 +70,10 @@ const app ={
       image:"https://media-cdn-v2.laodong.vn/storage/newsportal/2022/4/12/1033433/SLACAK---24H.jpeg?w=960&crop=auto&scale=both"
     }
 ],
+    setConfig: function (key, value) {
+        this.config[key] = value;
+        localStorage.setItem(PLAYER_STORAGE_KEY, JSON.stringify(this.config));
+    },
     render:function (){
         const htmls = this.songs.map((song, index) =>{
             return ` 
@@ -136,14 +143,14 @@ const app ={
         // handle button properties
         randomBtn.onclick = () =>{
             app.isRandoming = !app.isRandoming;
+            app.setConfig('isRandoming', app.isRandoming);
             randomBtn.classList.toggle('active', app.isRandoming)
         }
         repeatBtn.onclick = () =>{
             app.isRepeat = !app.isRepeat;
+            app.setConfig('isRepeat', app.isRepeat);
             repeatBtn.classList.toggle('active', app.isRepeat)
         }
-
-
         // handle Prev Music
         prevBtn.onclick = () =>{
             if(app.isRandoming){
@@ -216,6 +223,10 @@ const app ={
                 audio.currentTime = seekTime;
             }
     },
+    loadConfig: function() {
+        this.isRandoming = this.config.isRandoming;
+        this.isRepeat = this.config.isRepeat;
+    },
     nextSong: function() {
         app.currentIndex++;
         if(this.currentIndex >= this.songs.length ){
@@ -241,12 +252,17 @@ const app ={
 
     },
     start: function() {
+        this.loadConfig();
+
         this.defineProperties();
         this.handleEven();
 
         this.loadCurrentSong();
 
         this.render();
+
+        randomBtn.classList.toggle('active', app.isRandoming)
+        repeatBtn.classList.toggle('active', app.isRepeat) 
     }
 }
 app.start();
